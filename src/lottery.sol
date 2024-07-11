@@ -5,10 +5,11 @@ contract Lottery {
     address public manager;
     address[] public participants;
     address[] public winners;
-    uint256 public ticketPrice = 1 ether;
+    uint256 public ticketPrice;
 
-    constructor() {
+    constructor(uint _ticketPrice) {
         manager = msg.sender;
+        ticketPrice = _ticketPrice;
     }
 
     modifier onlyManager() {
@@ -16,14 +17,13 @@ contract Lottery {
         _;
     }
 
-    modifier onlyParticipants() {
-        require(participants.length > 0, "No participants in the lottery");
-        _;
+    function updateTicketPrice(uint _ticketPrice) public onlyManager {
+        ticketPrice = _ticketPrice;
     }
 
     function participate() public payable {
         // kept "==" because flat 0.000015
-        require(msg.value == 0.000015 ether, "Ticket price is 0.000015 ETH");
+        require(msg.value == ticketPrice, "ticketPrice not matched");
         participants.push(msg.sender);
     }
 
@@ -60,15 +60,7 @@ contract Lottery {
 
     function random() private view returns (uint256) {
         return
-            uint256(
-                keccak256(
-                    abi.encodePacked(
-                        block.prevrandao,
-                        block.timestamp,
-                        participants
-                    )
-                )
-            );
+            uint256(keccak256(abi.encodePacked(block.timestamp, participants)));
     }
 
     receive() external payable {
