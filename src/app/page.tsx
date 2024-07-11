@@ -2,28 +2,18 @@
 "use client";
 import { useEffect, useState } from "react";
 import contractABI from "@/Lottery.json";
-import {
-  useAccount,
-  useReadContract,
-  useWaitForTransactionReceipt,
-} from "wagmi";
-import { useWriteContract } from "wagmi";
-import { getPublicClient } from "@wagmi/core";
-import { holesky } from "@wagmi/core/chains";
-import { config } from "@/app/hooks/config";
+import { useAccount, useWriteContract } from "wagmi";
 import { getContract } from "viem";
 import md5 from "crypto-js/md5";
+import { CONTRACT_ADDRESS } from "@/app/constants";
+import { initializeClient } from "@/app/utils/publicClient";
 
-const contractAddress = "0x8C4dbEdce540F7663b8BeB4a0d7EB40c123B0663";
-
-const client = getPublicClient(config, {
-  chainId: holesky.id,
-});
+const client = initializeClient();
 
 export default function Home() {
-  const [participants, setParticipants] = useState([]);
   const { writeContractAsync } = useWriteContract();
   const { address, isConnected } = useAccount();
+  const [participants, setParticipants] = useState([]);
   const [isParticipating, setIsParticipating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showingWinners, setShowingWinners] = useState(false);
@@ -32,11 +22,15 @@ export default function Home() {
   const handleParticipate = async () => {
     setIsParticipating(true);
     console.log("hello");
-    console.log(address);
     try {
-      console.log("hehe");
+      console.log("inside try");
+      if (!isConnected) {
+        alert("Please connect your account to participate.");
+        return;
+      }
+      console.log(address);
       const tx = await writeContractAsync({
-        address: contractAddress,
+        address: CONTRACT_ADDRESS,
         account: address,
         abi: contractABI.abi,
         functionName: "participate",
@@ -61,7 +55,7 @@ export default function Home() {
     const getDetails = async () => {
       try {
         const contract = getContract({
-          address: contractAddress,
+          address: CONTRACT_ADDRESS,
           abi: contractABI.abi,
           client: client,
         });
@@ -86,9 +80,9 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-blue-100 via-purple-100 to-pink-100 p-8">
+    <div className="min-h-screen bg-gradient-to-r from-indigo-50 via-sky-50 to-indigo-50 p-8">
       <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-lg p-8">
-        <h1 className="text-4xl font-bold text-center text-purple-700 mb-8">
+        <h1 className="text-4xl font-bold text-center text-indigo-700 mb-8">
           Lottery DApp
         </h1>
         <p className="text-xl font-medium text-center text-gray-700 mb-6">
@@ -126,7 +120,7 @@ export default function Home() {
             <div className="flex justify-center">
               <button
                 onClick={() => handleParticipate()}
-                className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105"
+                className="bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105"
               >
                 {isParticipating ? "Participating..." : "Participate"}
               </button>

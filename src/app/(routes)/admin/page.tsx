@@ -1,25 +1,19 @@
 "use client";
 import { useEffect, useState } from "react";
 import contractABI from "@/Lottery.json";
-import { useAccount, useReadContract } from "wagmi";
-import { useWriteContract } from "wagmi";
-import { getPublicClient } from "@wagmi/core";
-import { config } from "@/app/hooks/config";
-import { holesky } from "@wagmi/core/chains";
+import { useAccount, useWriteContract } from "wagmi";
 import { getContract } from "viem";
+import { CONTRACT_ADDRESS } from "@/app/constants";
+import { initializeClient } from "@/app/utils/publicClient";
 
-const contractAddress = "0x8C4dbEdce540F7663b8BeB4a0d7EB40c123B0663";
-
-const client = getPublicClient(config, {
-  chainId: holesky.id,
-});
+const client = initializeClient();
 
 export default function Home() {
-  const [participants, setParticipants] = useState([]);
   const { writeContractAsync } = useWriteContract();
-  const [inputNumber, setInputNumber] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
   const { address, isConnected } = useAccount();
+  const [inputNumber, setInputNumber] = useState("");
+  const [participants, setParticipants] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isParticipating, setIsParticipating] = useState(false);
 
   // Fetch participants and count them
@@ -27,7 +21,7 @@ export default function Home() {
     const getDetails = async () => {
       try {
         const contract = getContract({
-          address: contractAddress,
+          address: CONTRACT_ADDRESS,
           abi: contractABI.abi,
           client: client,
         });
@@ -47,24 +41,26 @@ export default function Home() {
   const participantCount = participants.length;
 
   // Handle participate button click
-  const handleParticipate = async () => {
-    setIsParticipating(true);
+  const handleDeclareWinner = async () => {
+    if (!isConnected) {
+      alert("Please connect your account to participate.");
+      return;
+    }
 
     console.log("hello");
     if (!inputNumber) {
-      console.log("Please enter the number of winners.");
+      alert("Please enter the number of winners.");
       return;
     }
     if (parseInt(inputNumber) > participantCount) {
-      console.log(
-        "Number of winners cannot exceed the number of participants."
-      );
+      alert("Number of winners cannot exceed the number of participants.");
       return;
     }
     try {
+      setIsParticipating(true);
       console.log("hehe");
       const tx = await writeContractAsync({
-        address: contractAddress,
+        address: CONTRACT_ADDRESS,
         account: address,
         abi: contractABI.abi,
         functionName: "pickWinners",
@@ -86,9 +82,9 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-blue-100 via-purple-100 to-pink-100 p-8">
+    <div className="min-h-screen bg-gradient-to-r from-indigo-50 via-sky-50 to-indigo-50 p-8">
       <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-lg p-8">
-        <h1 className="text-4xl font-bold text-center text-purple-700 mb-8">
+        <h1 className="text-4xl font-bold text-center text-indigo-700 mb-8">
           Lottery DApp Admin Page
         </h1>
         <p className="text-xl font-medium text-center text-gray-700 mb-6">
@@ -121,15 +117,15 @@ export default function Home() {
               <div className="mt-4 flex items-center justify-center">
                 <input
                   type="number"
-                  className="border border-gray-300 rounded px-3 py-2 w-32 text-gray-800"
-                  placeholder="Enter number"
+                  className="border border-gray-300 rounded px-3 py-2 w-40 text-gray-800"
+                  placeholder="No of winners"
                   value={inputNumber}
                   onChange={(e) => setInputNumber(e.target.value)}
                   max={participantCount}
                 />
                 <button
-                  onClick={() => handleParticipate()}
-                  className="ml-4 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-2 px-4 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105"
+                  onClick={() => handleDeclareWinner()}
+                  className="ml-4 bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-2 px-4 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105"
                 >
                   {isParticipating ? "Declaring..." : "Declare"}
                 </button>
