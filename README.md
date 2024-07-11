@@ -14,3 +14,10 @@ RPC_URL=
 PVT_KEY=
 API_KEY=
 ```
+
+For the contract extention
+
+- we can use chainLink VRF too for randomness (to make it attack proof)
+- also openZeppelin ownable can also be used
+
+but kept it simple for task purpose.
